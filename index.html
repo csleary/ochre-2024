@@ -26,14 +26,21 @@
               class="relative flex aspect-square max-w-full shrink-0 snap-center snap-always overflow-hidden rounded transition-opacity duration-500"
               :class="{ 'opacity-100': isActive, 'cursor-pointer opacity-25': !isActive }"
               :id="release.id"
-              x-data="{ hasLoaded: false, isActive: false }"
-              x-init="$watch('activeReleaseId', value => {
-                  isActive = (value === release.id);
-
-                  if (isActive) {
-                    releaseTitle = release.title;
-                  }
-                })"
+              x-data="{ hasLoaded: false, hasLoadedImg: false, isActive: false, showFrame: false, timeout: null }"
+              x-effect="() => {
+                clearTimeout(timeout);
+                if (activeReleaseId === release.id) {
+                  isActive = true;
+                  releaseTitle = release.title;
+                  showFrame = true;
+                } else {
+                  hasLoaded = false;
+                  isActive = false;
+                  timeout = setTimeout(() => {
+                    showFrame = false;
+                  }, 500);
+                }
+              }"
               x-intersect.full="activeReleaseId = release.id"
               @click="() => {
                 const { left: leftContainer, width: widthContainer } = $refs.releases.getBoundingClientRect();
@@ -48,14 +55,24 @@
                 class="absolute inset-0 -z-10 flex items-end justify-center bg-zinc-950 p-8 font-medium text-zinc-400">
                 <div x-text="release.title"></div>
               </div>
-              <iframe
-                class="border-none transition-opacity duration-500"
-                :class="{ 'opacity-0': !hasLoaded, 'opacity-100': hasLoaded, 'pointer-events-none': !isActive }"
-                @load="hasLoaded = true"
-                loading="lazy"
-                seamless
-                :src="'https://bandcamp.com/EmbeddedPlayer/album=' + release.id + '/size=large/bgcol=09090b/linkcol=eab308/minimal=true/transparent=true/'"
-                style="width: 700px; height: 700px"></iframe>
+              <img
+                class="absolute inset-0 -z-10 flex items-end justify-center border-none bg-zinc-950 transition-opacity duration-500"
+                :class="{ 'opacity-0': !hasLoadedImg, 'opacity-100': hasLoadedImg, 'pointer-events-none': !isActive }"
+                :src="`https://f4.bcbits.com/img/${release.img}_5.jpg`"
+                @load="hasLoadedImg = true" />
+              <template x-if="showFrame">
+                <iframe
+                  class="border-none transition-opacity duration-500"
+                  :class="{ 'opacity-0': !hasLoaded, 'opacity-100': hasLoaded, 'pointer-events-none': !isActive }"
+                  loading="lazy"
+                  seamless
+                  :src="`https://bandcamp.ochremusic.com/EmbeddedPlayer/album=${release.id}/size=large/bgcol=09090b/linkcol=eab308/minimal=true/transparent=true/#`"
+                  style="width: 700px; height: 700px"
+                  @load="hasLoaded = true"></iframe>
+              </template>
+              <template x-if="!showFrame">
+                <div style="width: 700px; height: 700px"></div>
+              </template>
             </div>
           </template>
         </div>
@@ -87,66 +104,69 @@
       @click="showContact = true">
       Contact
     </button>
-    <div
-      class="fixed flex h-screen w-screen bg-black bg-opacity-50"
-      x-show="showContact"
-      x-transition.duration.300ms.opacity>
-      <div
-        class="container m-auto max-w-screen-sm rounded bg-zinc-800 p-8 text-zinc-300"
-        x-show="showContact"
-        x-transition>
-        <p class="mb-8">
-          Unfortunately I often receive messages from people mistaking me for the ecommerce site of the same name. So
-          please do confirm you're in the right place by checking the box below. Thanks!
-        </p>
-        <form
-          name="contact"
-          method="POST"
-          netlify-honeypot="bot-field"
-          x-data="{ hasConfirmed: false }"
-          x-trap="showContact"
-          data-netlify="true">
-          <input type="hidden" name="form-name" value="contact" />
-          <input type="hidden" name="bot-field" />
-          <input
-            class="mb-4 w-full rounded bg-zinc-950 p-4 text-zinc-300"
-            name="name"
-            placeholder="Your name…"
-            required />
-          <input
-            class="mb-4 w-full rounded bg-zinc-950 p-4 text-zinc-300"
-            name="email"
-            type="email"
-            placeholder="Your email address…"
-            required />
-          <textarea
-            class="mb-4 w-full rounded bg-zinc-950 p-4 text-zinc-300"
-            name="message"
-            placeholder="Your message…"
-            required
-            rows="8"></textarea>
-          <label class="mb-6 flex items-center rounded bg-zinc-900 px-6 py-2">
-            <input class="mr-6 accent-yellow-500" type="checkbox" required x-model="hasConfirmed" />
-            <span>I understand this site belongs to Ochre the musician, not the ecommerce company.</span>
-          </label>
-          <div class="flex justify-between">
-            <button
-              class="mr-4 rounded bg-none px-4 py-2 font-medium text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-yellow-500"
-              @click.prevent="showContact = false">
-              Close
-            </button>
-            <button
-              class="rounded bg-zinc-900 px-4 py-2 font-medium text-zinc-400 transition-colors enabled:hover:bg-zinc-950 enabled:hover:text-yellow-500 disabled:cursor-not-allowed disabled:opacity-75"
-              :disabled="!hasConfirmed"
-              type="submit">
-              Send
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
     <footer class="py-8 text-center text-zinc-400">
       <p x-data="{ date: new Date().getFullYear() }">&copy; <span x-text="date"></span> Ochre</p>
     </footer>
+    <template x-teleport="body">
+      <div
+        class="fixed flex h-screen w-screen overflow-hidden bg-black bg-opacity-50"
+        aria-hidden="true"
+        x-show="showContact"
+        x-transition.duration.300ms.opacity>
+        <div
+          class="m-auto max-h-full max-w-screen-sm overflow-y-auto rounded bg-zinc-800 p-8 text-zinc-300"
+          x-show="showContact"
+          x-transition>
+          <p class="mb-8">
+            Unfortunately I often receive messages from people mistaking me for the ecommerce site of the same name. So
+            please do confirm you're in the right place by checking the box below. Thanks!
+          </p>
+          <form
+            name="contact"
+            method="POST"
+            netlify-honeypot="bot-field"
+            x-data="{ hasConfirmed: false }"
+            x-trap="showContact"
+            data-netlify="true">
+            <input type="hidden" name="form-name" value="contact" />
+            <input type="hidden" name="bot-field" />
+            <input
+              class="mb-4 w-full rounded bg-zinc-950 p-4 text-zinc-300"
+              name="name"
+              placeholder="Your name…"
+              required />
+            <input
+              class="mb-4 w-full rounded bg-zinc-950 p-4 text-zinc-300"
+              name="email"
+              type="email"
+              placeholder="Your email address…"
+              required />
+            <textarea
+              class="mb-4 w-full rounded bg-zinc-950 p-4 text-zinc-300"
+              name="message"
+              placeholder="Your message…"
+              required
+              rows="8"></textarea>
+            <label class="mb-6 flex items-center rounded bg-zinc-900 px-6 py-2">
+              <input class="mr-6 accent-yellow-500" type="checkbox" required x-model="hasConfirmed" />
+              <span>I understand this site belongs to Ochre the musician, not the ecommerce company.</span>
+            </label>
+            <div class="flex justify-between">
+              <button
+                class="mr-4 rounded bg-none px-4 py-2 font-medium text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-yellow-500"
+                @click.prevent="showContact = false">
+                Close
+              </button>
+              <button
+                class="rounded bg-zinc-900 px-4 py-2 font-medium text-zinc-400 transition-colors enabled:hover:bg-zinc-950 enabled:hover:text-yellow-500 disabled:cursor-not-allowed disabled:opacity-75"
+                :disabled="!hasConfirmed"
+                type="submit">
+                Send
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </template>
   </body>
 </html>
