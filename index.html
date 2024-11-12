@@ -99,7 +99,15 @@
           Unfortunately I often receive messages from people mistaking me for the ecommerce site of the same name. So
           please do confirm you're in the right place by checking the box below. Thanks!
         </p>
-        <form name="contact" method="POST" x-data="{ hasConfirmed: false }" x-trap="showContact" data-netlify="true">
+        <form
+          name="contact"
+          method="POST"
+          netlify-honeypot="bot-field"
+          x-data="{ hasConfirmed: false }"
+          x-trap="showContact"
+          data-netlify="true">
+          <input type="hidden" name="form-name" value="contact" />
+          <input type="hidden" name="bot-field" />
           <input
             class="mb-4 w-full rounded bg-zinc-950 p-4 text-zinc-300"
             name="name"
