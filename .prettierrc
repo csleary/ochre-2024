@@ -1,0 +1,7 @@
+{
+  "bracketSameLine": true,
+  "plugins": ["prettier-plugin-organize-attributes", "prettier-plugin-tailwindcss"],
+  "printWidth": 120,
+  "tabWidth": 2,
+  "trailingComma": "none"
+}

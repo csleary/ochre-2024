@@ -1,0 +1,23 @@
+@import url("https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100..900;1,100..900&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+[x-cloak] {
+  display: none !important;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+header,
+h1,
+h2,
+h3 {
+  font-family: "Jost", sans-serif;
+}

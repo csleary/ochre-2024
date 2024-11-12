@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script type="module" src="/src/main.ts" defer></script>
+    <title>Ochre</title>
+  </head>
+  <body
+    class="flex min-h-screen grow flex-col bg-zinc-900 text-zinc-200"
+    x-cloak
+    x-data="{ activeReleaseId: '', showContact: false, releaseTitle: 'Select a release…' }"
+    :class="{ 'overflow-hidden': showContact }">
+    <header class="py-16 text-center text-zinc-200">
+      <h1 class="text-8xl font-extralight">OCHRE</h1>
+    </header>
+    <div class="flex max-w-full grow flex-row flex-wrap overflow-hidden md:container md:mx-auto">
+      <main class="grow basis-3/4 overflow-hidden p-4 md:p-8">
+        <h2 class="text-center text-3xl font-extralight md:text-5xl" x-text="releaseTitle"></h2>
+        <div
+          class="flex w-full touch-pan-x snap-x snap-mandatory gap-16 overflow-x-auto rounded py-8"
+          id="releases"
+          x-ref="releases">
+          <template x-for="release in $store.releases" :key="release.id">
+            <div
+              class="relative flex aspect-square max-w-full shrink-0 snap-center snap-always overflow-hidden rounded transition-opacity duration-500"
+              :class="{ 'opacity-100': isActive, 'cursor-pointer opacity-25': !isActive }"
+              :id="release.id"
+              x-data="{ hasLoaded: false, isActive: false }"
+              x-init="$watch('activeReleaseId', value => {
+                  isActive = (value === release.id);
+
+                  if (isActive) {
+                    releaseTitle = release.title;
+                  }
+                })"
+              x-intersect.full="activeReleaseId = release.id"
+              @click="() => {
+                const { left: leftContainer, width: widthContainer } = $refs.releases.getBoundingClientRect();
+                const { left: leftEl, width: widthEl } = $el.getBoundingClientRect();
+                const leftEdge = leftEl - leftContainer;
+                const scrollLeft = $refs.releases.scrollLeft;
+                const left = scrollLeft + leftEdge - (widthContainer - widthEl) / 2;
+                $refs.releases.scrollTo({ left, behavior: 'smooth' });
+                activeReleaseId = release.id
+              }">
+              <div
+                class="absolute inset-0 -z-10 flex items-end justify-center bg-zinc-950 p-8 font-medium text-zinc-400">
+                <div x-text="release.title"></div>
+              </div>
+              <iframe
+                class="border-none transition-opacity duration-500"
+                :class="{ 'opacity-0': !hasLoaded, 'opacity-100': hasLoaded, 'pointer-events-none': !isActive }"
+                @load="hasLoaded = true"
+                loading="lazy"
+                seamless
+                :src="'https://bandcamp.com/EmbeddedPlayer/album=' + release.id + '/size=large/bgcol=09090b/linkcol=eab308/minimal=true/transparent=true/'"
+                style="width: 700px; height: 700px"></iframe>
+            </div>
+          </template>
+        </div>
+      </main>
+      <div class="p-4 md:p-8" id="sidebar">
+        <h3 class="pb-8 text-3xl font-extralight text-zinc-400 md:text-5xl">Elsewhere</h3>
+        <ul class="font-medium text-yellow-500">
+          <li><a rel="external nofollow noopener " href="https://bandcamp.ochremusic.com/">Bandcamp</a></li>
+          <li>
+            <a rel="external nofollow noopener" href="https://bsky.app/profile/ochremusic.bsky.social">Bluesky</a>
+          </li>
+          <li><a rel="external nofollow noopener" href="https://soundcloud.com/ochre">SoundCloud</a></li>
+          <li>
+            <a rel="external nofollow noopener" href="https://play.spotify.com/artist/0OmHDBh5styCXDWKwz58Ts"
+              >Spotify</a
+            >
+          </li>
+          <li>
+            <a rel="external nofollow noopener" href="https://music.apple.com/nl/artist/ochre/84229320?l=en"
+              >Apple Music</a
+            >
+          </li>
+          <li><a rel="external nofollow noopener" href="https://www.youtube.com/user/ochremusic">YouTube</a></li>
+        </ul>
+      </div>
+    </div>
+    <button
+      class="fixed right-4 flex aspect-square flex-row flex-wrap content-center rounded-full bg-zinc-950 p-4 font-medium text-zinc-400 transition-colors duration-300 hover:bg-black hover:text-yellow-500 max-sm:bottom-4 md:right-8 md:top-8"
+      @click="showContact = true">
+      Contact
+    </button>
+    <div
+      class="fixed flex h-screen w-screen bg-black bg-opacity-50"
+      x-show="showContact"
+      x-transition.duration.300ms.opacity>
+      <div
+        class="container m-auto max-w-screen-sm rounded bg-zinc-800 p-8 text-zinc-300"
+        x-show="showContact"
+        x-transition>
+        <p class="mb-8">
+          Unfortunately I often receive messages from people mistaking me for the ecommerce site of the same name. So
+          please do confirm you're in the right place by checking the box below. Thanks!
+        </p>
+        <form name="contact" method="POST" x-data="{ hasConfirmed: false }" x-trap="showContact" data-netlify="true">
+          <input
+            class="mb-4 w-full rounded bg-zinc-950 p-4 text-zinc-300"
+            name="name"
+            placeholder="Your name…"
+            required />
+          <input
+            class="mb-4 w-full rounded bg-zinc-950 p-4 text-zinc-300"
+            name="email"
+            type="email"
+            placeholder="Your email address…"
+            required />
+          <textarea
+            class="mb-4 w-full rounded bg-zinc-950 p-4 text-zinc-300"
+            name="message"
+            placeholder="Your message…"
+            required
+            rows="8"></textarea>
+          <label class="mb-6 flex items-center rounded bg-zinc-900 px-6 py-2">
+            <input class="mr-6 accent-yellow-500" type="checkbox" required x-model="hasConfirmed" />
+            <span>I understand this site belongs to Ochre the musician, not the ecommerce company.</span>
+          </label>
+          <div class="flex justify-between">
+            <button
+              class="mr-4 rounded bg-none px-4 py-2 font-medium text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-yellow-500"
+              @click.prevent="showContact = false">
+              Close
+            </button>
+            <button
+              class="rounded bg-zinc-900 px-4 py-2 font-medium text-zinc-400 transition-colors enabled:hover:bg-zinc-950 enabled:hover:text-yellow-500 disabled:cursor-not-allowed disabled:opacity-75"
+              :disabled="!hasConfirmed"
+              type="submit">
+              Send
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <footer class="py-8 text-center text-zinc-400">
+      <p x-data="{ date: new Date().getFullYear() }">&copy; <span x-text="date"></span> Ochre</p>
+    </footer>
+  </body>
+</html>
