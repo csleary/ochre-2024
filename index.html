@@ -9,7 +9,7 @@
   <body
     class="flex min-h-screen grow flex-col bg-zinc-900 text-zinc-200"
     x-cloak
-    x-data="{ activeReleaseId: '', showContact: false, releaseTitle: 'Select a release…' }"
+    x-data="{ activeReleaseId: $store.releases[0].id, showContact: false, releaseTitle: 'Select a release…' }"
     :class="{ 'overflow-hidden': showContact }">
     <header class="py-16 text-center text-zinc-200">
       <h1 class="text-8xl font-extralight">OCHRE</h1>
@@ -18,7 +18,7 @@
       <main class="grow basis-3/4 overflow-hidden p-4 md:p-8">
         <h2 class="text-center text-3xl font-extralight md:text-5xl" x-text="releaseTitle"></h2>
         <div
-          class="flex w-full touch-pan-x snap-x snap-mandatory gap-16 overflow-x-auto rounded py-8"
+          class="touch-pan flex w-full snap-x snap-mandatory gap-16 overflow-x-auto rounded py-8"
           id="releases"
           x-ref="releases">
           <template x-for="release in $store.releases" :key="release.id">
@@ -33,13 +33,11 @@
                   isActive = true;
                   releaseTitle = release.title;
                   showFrame = true;
-                } else {
-                  hasLoaded = false;
-                  isActive = false;
-                  timeout = setTimeout(() => {
-                    showFrame = false;
-                  }, 500);
+                  return;
                 }
+                hasLoaded = false;
+                isActive = false;
+                timeout = setTimeout(() => (showFrame = false), 500);
               }"
               x-intersect.full="activeReleaseId = release.id"
               @click="() => {
@@ -151,7 +149,7 @@
               <input class="mr-6 accent-yellow-500" type="checkbox" required x-model="hasConfirmed" />
               <span>I understand this site belongs to Ochre the musician, not the ecommerce company.</span>
             </label>
-            <div class="flex justify-between">
+            <div class="mb-16 flex justify-between">
               <button
                 class="mr-4 rounded bg-none px-4 py-2 font-medium text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-yellow-500"
                 @click.prevent="showContact = false">

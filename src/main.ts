@@ -14,10 +14,10 @@ Alpine.plugin(focus);
 Alpine.plugin(intersect);
 
 Alpine.store("releases", [
-  { id: "263300316", img: "a2224224835", title: "Lemodie (15th Anniversary Edition)" },
+  { id: "263300316", img: "a2224224835", title: "Lemodie (15th A.E.)" },
   { id: "716799222", img: "a0531723196", title: "An Eye to Windward" },
   { id: "2367681852", img: "a0348369492", title: "Understory" },
-  { id: "2194188136", img: "a0659058827", title: "A Midsummer Nice Dream (15th Anniversary Edition)" },
+  { id: "2194188136", img: "a0659058827", title: "A Midsummer Nice Dream (15th A.E.)" },
   { id: "3927340136", img: "a0222776262", title: "Project Caelus" },
   { id: "506275920", img: "a4092091475", title: "Beyond the Outer Loop" },
   { id: "3323002998", img: "a2064237524", title: "Isolette" },
