@@ -63,7 +63,8 @@
                 `"
                 :src="`https://f4.bcbits.com/img/${release.img}_5.jpg`"
                 :alt="`The album art for '${release.title}', by Ochre.`"
-                @load="hasLoadedImg = true" />
+                @load="hasLoadedImg = true"
+                loading="lazy" />
               <template x-if="showFrame">
                 <iframe
                   class="bandcamp border-none transition-opacity duration-500"
