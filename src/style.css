@@ -21,3 +21,8 @@ h2,
 h3 {
   font-family: "Jost", sans-serif;
 }
+
+.bandcamp {
+  height: 700px;
+  width: 700px;
+}

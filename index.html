@@ -56,16 +56,21 @@
               <img
                 class="absolute inset-0 -z-10 flex items-end justify-center border-none bg-zinc-950 transition-opacity duration-500"
                 :class="{ 'opacity-0': !hasLoadedImg, 'opacity-100': hasLoadedImg, 'pointer-events-none': !isActive }"
+                :srcset="`
+                  https://f4.bcbits.com/img/${release.img}_5.jpg,
+                  https://f4.bcbits.com/img/${release.img}_10.jpg 2x,
+                  https://f4.bcbits.com/img/${release.img}_1.jpg 3x
+                `"
                 :src="`https://f4.bcbits.com/img/${release.img}_5.jpg`"
+                :alt="`The album art for '${release.title}', by Ochre.`"
                 @load="hasLoadedImg = true" />
               <template x-if="showFrame">
                 <iframe
-                  class="border-none transition-opacity duration-500"
+                  class="bandcamp border-none transition-opacity duration-500"
                   :class="{ 'opacity-0': !hasLoaded, 'opacity-100': hasLoaded, 'pointer-events-none': !isActive }"
                   loading="lazy"
                   seamless
                   :src="`https://bandcamp.ochremusic.com/EmbeddedPlayer/album=${release.id}/size=large/bgcol=09090b/linkcol=eab308/minimal=true/transparent=true/#`"
-                  style="width: 700px; height: 700px"
                   @load="hasLoaded = true"></iframe>
               </template>
               <template x-if="!showFrame">
