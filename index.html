@@ -28,6 +28,11 @@
               :class="{ 'opacity-100': isActive, 'cursor-pointer opacity-25': !isActive }"
               :id="release.id"
               x-intersect:enter.full="() => {
+                if (timeout) {
+                  clearTimeout(timeout);
+                  hasLoaded = true;
+                  timeout = null;
+                }
                 isActive = true;
                 releaseTitle = release.title;
                 showFrame = true;
@@ -36,7 +41,10 @@
                 clearTimeout(timeout);
                 hasLoaded = false;
                 isActive = false;
-                timeout = setTimeout(() => (showFrame = false), 500)
+                timeout = setTimeout(() => {
+                  showFrame = false;
+                  timeout = null;
+                }, 500)
               }"
               @click="$el.scrollIntoView({ behavior: 'smooth' })">
               <div
