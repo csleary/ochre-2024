@@ -24,16 +24,19 @@
           <template x-for="release in $store.releases" :key="release.id">
             <div
               class="relative flex aspect-square max-w-full shrink-0 snap-center snap-always overflow-hidden rounded transition-opacity duration-500"
-              x-data="{ hasLoaded: false, isActive: false }"
+              x-data="{ hasLoaded: false, isActive: false, showFrame: false, timeout: null }"
               :class="{ 'opacity-100': isActive, 'cursor-pointer opacity-25': !isActive }"
               :id="release.id"
-              x-intersect.full="() => {
-                isActive = true
+              x-intersect:enter.full="() => {
+                isActive = true;
                 releaseTitle = release.title;
+                showFrame = true;
               }"
               x-intersect:leave.full="() => {
-                hasLoaded = false
-                isActive = false
+                clearTimeout(timeout);
+                hasLoaded = false;
+                isActive = false;
+                timeout = setTimeout(() => (showFrame = false), 500)
               }"
               @click="$el.scrollIntoView({ behavior: 'smooth' })">
               <div
@@ -53,16 +56,17 @@
                 :alt="`The album art for '${release.title}', by Ochre.`"
                 @load="hasLoadedImg = true"
                 loading="lazy" />
-              <template x-if="isActive">
+              <template x-if="showFrame">
                 <iframe
                   class="bandcamp border-none transition-opacity duration-500"
-                  :class="{ 'opacity-0 invisible': !hasLoaded, 'opacity-100 visible': hasLoaded }"
+                  :class="{ 'opacity-0': !hasLoaded, 'opacity-100 visible': hasLoaded }"
+                  :class="{ 'invisible': !showFrame }"
                   loading="lazy"
                   :src="`https://bandcamp.ochremusic.com/EmbeddedPlayer/album=${release.id}/size=large/bgcol=09090b/linkcol=eab308/minimal=true/transparent=true/#`"
                   @load="hasLoaded = true"></iframe>
               </template>
-              <template x-if="!isActive">
-                <div style="width: 700px; height: 700px"></div>
+              <template x-if="!showFrame">
+                <div class="bandcamp"></div>
               </template>
             </div>
           </template>
