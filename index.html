@@ -9,21 +9,31 @@
   <body
     class="flex min-h-screen grow flex-col bg-zinc-900 text-zinc-200"
     x-cloak
-    x-data="{ showContact: false, releaseTitle: 'Select a release…' }"
+    x-data="{ showContact: false, activeReleaseId: '', releaseTitle: 'Select a release…', releaseYear: '' }"
     :class="{ 'overflow-hidden': showContact }">
     <header class="py-16 text-center text-zinc-200">
       <h1 class="text-8xl font-extralight">OCHRE</h1>
     </header>
     <div class="flex max-w-full grow flex-row flex-wrap overflow-hidden md:container md:mx-auto">
       <main class="grow basis-3/4 overflow-hidden p-4 md:p-8">
-        <h2 class="text-center text-3xl font-extralight md:text-5xl" x-text="releaseTitle"></h2>
+        <h2 class="mb-2 text-center text-3xl font-extralight md:text-5xl" x-text="releaseTitle"></h2>
+        <h3 class="mb-8 text-center text-2xl font-extralight text-zinc-400 md:text-4xl" x-text="releaseYear"></h3>
+        <div class="flex justify-center gap-2">
+          <template x-for="release in $store.releases" :key="release.id">
+            <div
+              class="inline-block aspect-square w-8 cursor-pointer"
+              :class="{ 'outline outline-3 outline-white': activeReleaseId === release.id }"
+              :style="`background-color: ${release.color};`"
+              @click="$scrollToRelease($refs.releases, release.id)"></div>
+          </template>
+        </div>
         <div
           class="touch-pan flex w-full snap-x snap-mandatory gap-16 overflow-x-auto rounded py-8"
           id="releases"
           x-ref="releases">
           <template x-for="release in $store.releases" :key="release.id">
             <div
-              class="relative flex aspect-square max-w-full shrink-0 select-none snap-center snap-always overflow-hidden rounded transition-all duration-500"
+              class="relative flex aspect-square max-w-full shrink-0 select-none overflow-hidden rounded transition-all duration-500"
               x-data="{ hasLoaded: false, isActive: false, renderFrame: false, timeout: null }"
               :class="{ 'opacity-100 grayscale-0': isActive, 'cursor-pointer opacity-25 grayscale': !isActive }"
               :id="release.id"
@@ -36,13 +46,17 @@
 
                   return $nextTick(() => {
                     isActive = true;
+                    activeReleaseId = release.id;
                     releaseTitle = release.title;
+                    releaseYear = release.year;
                     renderFrame = true;
                   });
                 }
 
                 isActive = true;
+                activeReleaseId = release.id;
                 releaseTitle = release.title;
+                releaseYear = release.year;
                 renderFrame = true;
               }"
               x-intersect:leave.full="() => {
@@ -54,7 +68,7 @@
                   timeout = null;
                 }, 500)
               }"
-              @click="$el.scrollIntoView({ behavior: 'smooth' })">
+              @click="$scrollToRelease($refs.releases, $el)">
               <div
                 class="absolute inset-0 -z-10 flex items-end justify-center bg-zinc-950 p-8 font-medium text-zinc-400">
                 <div x-text="release.title"></div>
@@ -88,7 +102,7 @@
         </div>
       </main>
       <div class="p-4 md:p-8" id="sidebar">
-        <h3 class="pb-8 text-3xl font-extralight text-zinc-400 md:text-5xl">Elsewhere</h3>
+        <h3 class="mb-8 text-3xl font-extralight text-zinc-400 md:text-5xl">Elsewhere</h3>
         <ul class="font-medium text-yellow-500">
           <li><a href="https://bandcamp.ochremusic.com/" rel="external nofollow noopener">Bandcamp</a></li>
           <li>
