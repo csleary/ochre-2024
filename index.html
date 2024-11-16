@@ -24,24 +24,33 @@
           <template x-for="release in $store.releases" :key="release.id">
             <div
               class="relative flex aspect-square max-w-full shrink-0 snap-center snap-always overflow-hidden rounded transition-opacity duration-500"
-              x-data="{ hasLoaded: false, isActive: false, showFrame: false, timeout: null }"
+              x-data="{ hasLoaded: false, isActive: false, renderFrame: false, timeout: null }"
               :class="{ 'opacity-100': isActive, 'cursor-pointer opacity-25': !isActive }"
               :id="release.id"
               x-intersect:enter.full="() => {
                 if (timeout) {
                   clearTimeout(timeout);
                   timeout = null;
+                  hasLoaded = false;
+                  renderFrame = false;
+
+                  return $nextTick(() => {
+                    isActive = true;
+                    releaseTitle = release.title;
+                    renderFrame = true;
+                  });
                 }
+
                 isActive = true;
                 releaseTitle = release.title;
-                showFrame = true;
+                renderFrame = true;
               }"
               x-intersect:leave.full="() => {
                 hasLoaded = false;
                 isActive = false;
+
                 timeout = setTimeout(() => {
-                  if (isActive) return;
-                  showFrame = false;
+                  renderFrame = false;
                   timeout = null;
                 }, 500)
               }"
@@ -63,7 +72,7 @@
                 :alt="`The album art for '${release.title}', by Ochre.`"
                 loading="lazy"
                 @load="hasLoadedImg = true" />
-              <template x-if="showFrame">
+              <template x-if="renderFrame">
                 <iframe
                   class="bandcamp border-none opacity-0 transition-opacity duration-500"
                   :class="{ 'opacity-0': !hasLoaded, 'opacity-100': hasLoaded }"
@@ -71,7 +80,7 @@
                   :src="`https://bandcamp.ochremusic.com/EmbeddedPlayer/album=${release.id}/size=large/bgcol=09090b/linkcol=eab308/minimal=true/transparent=true/#`"
                   @load="hasLoaded = true"></iframe>
               </template>
-              <template x-if="!showFrame">
+              <template x-if="!renderFrame">
                 <div class="bandcamp"></div>
               </template>
             </div>
