@@ -15,9 +15,11 @@ Alpine.plugin(intersect);
 
 Alpine.magic("scrollToRelease", () => (container: HTMLElement, releaseIdOrElement: string | HTMLElement) => {
   let releaseElement: HTMLElement | null;
+  let behavior: ScrollBehavior = "smooth";
 
   if (typeof releaseIdOrElement === "string") {
     releaseElement = document.getElementById(releaseIdOrElement);
+    behavior = "instant";
   } else {
     releaseElement = releaseIdOrElement;
   }
@@ -27,7 +29,7 @@ Alpine.magic("scrollToRelease", () => (container: HTMLElement, releaseIdOrElemen
   const releaseRect = releaseElement.getBoundingClientRect();
   const offset = containerRect.width / 2 - releaseRect.width / 2;
   const scrollLeft = container.scrollLeft + (releaseRect.left - containerRect.left) - offset;
-  container.scrollTo({ left: scrollLeft, behavior: "smooth" });
+  container.scrollTo({ left: scrollLeft, behavior });
 });
 
 Alpine.store("releases", [

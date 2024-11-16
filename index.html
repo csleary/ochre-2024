@@ -33,7 +33,7 @@
           x-ref="releases">
           <template x-for="release in $store.releases" :key="release.id">
             <div
-              class="relative flex aspect-square max-w-full shrink-0 select-none overflow-hidden rounded transition-all duration-500"
+              class="relative flex aspect-square max-w-full shrink-0 select-none snap-center snap-always overflow-hidden rounded transition-all duration-500"
               x-data="{ hasLoaded: false, isActive: false, renderFrame: false, timeout: null }"
               :class="{ 'opacity-100 grayscale-0': isActive, 'cursor-pointer opacity-25 grayscale': !isActive }"
               :id="release.id"
