@@ -34,40 +34,46 @@
           <template x-for="release in $store.releases" :key="release.id">
             <div
               class="relative flex aspect-square max-w-full shrink-0 select-none snap-center snap-always overflow-hidden rounded transition-all duration-500"
-              x-data="{ hasLoaded: false, isActive: false, renderFrame: false, timeout: null }"
-              :class="{ 'opacity-100 grayscale-0': isActive, 'cursor-pointer opacity-25 grayscale': !isActive }"
+              :class="{
+                'opacity-100 grayscale-0': activeReleaseId === release.id,
+                'cursor-pointer opacity-25 grayscale': activeReleaseId !== release.id
+              }"
               :id="release.id"
-              x-intersect:enter.full="() => {
-                if (timeout) {
-                  clearTimeout(timeout);
-                  timeout = null;
-                  hasLoaded = false;
-                  renderFrame = false;
-
-                  return $nextTick(() => {
-                    isActive = true;
-                    activeReleaseId = release.id;
+              x-data="{ hasLoaded: false, renderFrame: false, timeout: null }"
+              x-init="$watch('activeReleaseId', (value, prev) => {
+                if (value === release.id) {
+                  const setActiveTrack = () => {
                     releaseTitle = release.title;
                     releaseYear = release.year;
                     renderFrame = true;
-                  });
+                  }
+  
+                  if (timeout) {
+                    clearTimeout(timeout);
+                    timeout = null;
+                    hasLoaded = false;
+                    renderFrame = false;
+                    return $nextTick(setActiveTrack);
+                  } 
+                  
+                  return setActiveTrack();
                 }
 
-                isActive = true;
-                activeReleaseId = release.id;
-                releaseTitle = release.title;
-                releaseYear = release.year;
-                renderFrame = true;
-              }"
-              x-intersect:leave.full="() => {
-                hasLoaded = false;
-                isActive = false;
+                if (prev === release.id) {
+                  hasLoaded = false;
+                  
+                  timeout = setTimeout(() => {
+                    renderFrame = false;
+                    timeout = null;
+                  }, 500)
 
-                timeout = setTimeout(() => {
-                  renderFrame = false;
-                  timeout = null;
-                }, 500)
-              }"
+                  return;
+                }
+
+                hasLoaded = false;
+                renderFrame = false;
+              })"
+              x-intersect:enter.full="activeReleaseId = release.id"
               @click="$scrollToRelease($refs.releases, $el)">
               <div
                 class="absolute inset-0 -z-10 flex items-end justify-center bg-zinc-950 p-8 font-medium text-zinc-400">
