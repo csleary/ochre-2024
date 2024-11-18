@@ -24,7 +24,11 @@
               class="inline-block aspect-square w-8 cursor-pointer"
               :class="{ 'outline outline-3 outline-white': activeReleaseId === release.id }"
               :style="`background-color: ${release.color};`"
-              @click="$scrollToRelease($refs.releases, release.id)"></div>
+              @click="() => {
+                if (activeReleaseId === release.id) return;
+                activeReleaseId = release.id;
+                $scrollToRelease($refs.releases, release.id);
+              }"></div>
           </template>
         </div>
         <div
