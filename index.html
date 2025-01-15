@@ -9,7 +9,14 @@
   <body
     class="flex min-h-screen grow flex-col bg-zinc-900 text-zinc-200"
     x-cloak
-    x-data="{ showContact: false, activeReleaseId: '', releaseTitle: 'Select a release…', releaseYear: '' }"
+    x-data="{ 
+      activeReleaseId: '',
+      releaseTitle: 'Select a release…',
+      releaseYear: '',
+      scrollActive: false,
+      showContact: false,
+      timeoutScroll: null
+    }"
     :class="{ 'overflow-hidden': showContact }">
     <header class="py-16 text-center text-zinc-200">
       <h1 class="text-8xl font-extralight">OCHRE</h1>
@@ -17,38 +24,48 @@
     <div class="flex max-w-full grow flex-row flex-wrap overflow-hidden md:container md:mx-auto">
       <main class="grow basis-3/4 overflow-hidden p-4 md:p-8">
         <h2 class="mb-2 text-center text-3xl font-extralight md:text-5xl" x-text="releaseTitle"></h2>
-        <h3 class="mb-8 text-center text-2xl font-extralight text-zinc-400 md:text-4xl" x-text="releaseYear"></h3>
+        <h3
+          class="mb-8 text-center text-2xl font-extralight text-zinc-400 md:text-4xl"
+          x-text="releaseYear || '&nbsp;'"></h3>
         <div class="flex justify-center gap-2">
           <template x-for="release in $store.releases" :key="release.id">
             <div
-              class="inline-block aspect-square w-8 cursor-pointer"
+              class="inline-block aspect-square w-8 cursor-pointer rounded"
               :class="{ 'outline outline-3 outline-white': activeReleaseId === release.id }"
               :style="`background-color: ${release.color};`"
-              @click="() => {
-                if (activeReleaseId === release.id) return;
-                activeReleaseId = release.id;
-                $scrollToRelease($refs.releases, release.id);
-              }"></div>
+              @click="if (activeReleaseId === release.id) return; activeReleaseId = release.id; $scrollToRelease($refs.releases, release.id);"></div>
           </template>
         </div>
         <div
           class="touch-pan flex w-full snap-x snap-mandatory gap-16 overflow-x-auto rounded py-8"
           id="releases"
+          @scroll="() => {
+            if (timeoutScroll) {
+              clearTimeout(timeoutScroll);
+            }
+
+            scrollActive = true;
+
+            timeoutScroll = setTimeout(() => {
+              scrollActive = false;
+              timeoutScroll = null;
+            }, 150);
+          }"
           x-ref="releases">
-          <template x-for="release in $store.releases" :key="release.id">
+          <template x-for="(release, index) in $store.releases" :key="release.id">
             <div
               class="relative flex aspect-square max-w-full shrink-0 select-none snap-center snap-always overflow-hidden rounded transition-all duration-500"
               :class="{
-                'opacity-100 grayscale-0': activeReleaseId === release.id,
-                'cursor-pointer opacity-25 grayscale': activeReleaseId !== release.id
-              }"
+              'opacity-100 grayscale-0': activeReleaseId === release.id,
+              'cursor-pointer opacity-25 grayscale': activeReleaseId !== release.id
+            }"
               :id="release.id"
               x-data="{ hasLoaded: false, renderFrame: false, timeout: null }"
-              x-init="$watch('activeReleaseId', (value, prev) => {
-                if (value === release.id) {
+              x-init="if (index === 0) renderFrame = true; $watch('scrollActive', (_scrollActive) => {
+                if (!_scrollActive && activeReleaseId === release.id && !renderFrame) {
                   const setActiveTrack = () => {
+                    activeReleaseId = release.id;
                     releaseTitle = release.title;
-                    releaseYear = release.year;
                     renderFrame = true;
                   }
   
@@ -63,22 +80,17 @@
                   return setActiveTrack();
                 }
 
-                if (prev === release.id) {
+                if (activeReleaseId !== release.id && renderFrame) {
                   hasLoaded = false;
                   
                   timeout = setTimeout(() => {
                     renderFrame = false;
                     timeout = null;
                   }, 500)
-
-                  return;
                 }
-
-                hasLoaded = false;
-                renderFrame = false;
               })"
-              x-intersect:enter.full="activeReleaseId = release.id"
-              @click="$scrollToRelease($refs.releases, $el)">
+              x-intersect:enter.full="activeReleaseId = release.id; releaseTitle = release.title; releaseYear = release.year"
+              @click="activeReleaseId = release.id; releaseTitle = release.title; releaseYear = release.year; $scrollToRelease($refs.releases, $el)">
               <div
                 class="absolute inset-0 -z-10 flex items-end justify-center bg-zinc-950 p-8 font-medium text-zinc-400">
                 <div x-text="release.title"></div>
@@ -155,6 +167,7 @@
         x-transition.duration.300ms.opacity>
         <div
           class="m-auto max-h-full max-w-screen-sm overflow-y-auto rounded bg-zinc-800 p-8 text-zinc-300"
+          @keydown.escape="showContact = false"
           x-show="showContact"
           x-transition>
           <p class="mb-8">
@@ -193,7 +206,7 @@
               <input class="mr-6 accent-yellow-500" name="confirm" type="checkbox" required x-model="hasConfirmed" />
               <span>I understand this site belongs to Ochre the musician, not the ecommerce company.</span>
             </label>
-            <div class="mb-16 flex justify-between">
+            <div class="mb-16 flex justify-between md:mb-0">
               <button
                 class="mr-4 rounded bg-none px-4 py-2 font-medium text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-yellow-500"
                 @click.prevent="showContact = false">
