@@ -33,6 +33,7 @@ Alpine.magic("scrollToRelease", () => (container: HTMLElement, releaseIdOrElemen
 });
 
 Alpine.store("releases", [
+  { id: "1029783069", img: "a0431739409", color: "#584135", year: "2025", title: "Night Cycle" },
   { id: "263300316", img: "a2224224835", color: "#e3a681", year: "2021", title: "Lemodie (15th A.E.)" },
   { id: "716799222", img: "a0531723196", color: "#c3724f", year: "2021", title: "An Eye to Windward" },
   { id: "2367681852", img: "a0348369492", color: "#a52319", year: "2020", title: "Understory" },
