@@ -11,6 +11,7 @@
     x-cloak
     x-data="{ 
       activeReleaseId: '',
+      bc: '',
       releaseTitle: 'Select a release…',
       releaseYear: '',
       scrollActive: false,
@@ -19,14 +20,21 @@
     }"
     :class="{ 'overflow-hidden': showContact }">
     <header class="py-16 text-center text-zinc-200">
-      <h1 class="text-8xl font-extralight">OCHRE</h1>
+      <h1 class="text-8xl font-extralight uppercase">Ochre</h1>
     </header>
     <div class="flex max-w-full grow flex-row flex-wrap overflow-hidden md:container md:mx-auto">
       <main class="grow basis-3/4 overflow-hidden p-4 md:p-8">
         <h2 class="mb-2 text-center text-3xl font-extralight md:text-5xl" x-text="releaseTitle"></h2>
         <h3
-          class="mb-8 text-center text-2xl font-extralight text-zinc-400 md:text-4xl"
+          class="mb-2 text-center text-2xl font-extralight text-zinc-400 md:text-4xl"
           x-text="releaseYear || '&nbsp;'"></h3>
+        <div class="mb-6 flex items-center justify-center">
+          <button
+            class="inline-flex flex-row flex-wrap content-center rounded-md bg-zinc-950 px-4 py-1 font-medium text-zinc-400 transition-colors duration-300 hover:bg-black hover:text-yellow-500"
+            @click="window.location.href = `https://bandcamp.ochremusic.com/album/${bc}`">
+            Get it &rarr;
+          </button>
+        </div>
         <div class="flex justify-center gap-2">
           <template x-for="release in $store.releases" :key="release.id">
             <div
@@ -49,7 +57,7 @@
             timeoutScroll = setTimeout(() => {
               scrollActive = false;
               timeoutScroll = null;
-            }, 150);
+            }, 300);
           }"
           x-ref="releases">
           <template x-for="(release, index) in $store.releases" :key="release.id">
@@ -89,18 +97,29 @@
                   }, 500)
                 }
               })"
-              x-intersect:enter.full="activeReleaseId = release.id; releaseTitle = release.title; releaseYear = release.year"
-              @click="activeReleaseId = release.id; releaseTitle = release.title; releaseYear = release.year; $scrollToRelease($refs.releases, $el)">
+              x-intersect:enter.threshold.40="() => {
+                activeReleaseId = release.id;
+                bc = release.bc;
+                releaseTitle = release.title;
+                releaseYear = release.year;
+              }"
+              @click="() => {
+                activeReleaseId = release.id;
+                bc = release.bc;
+                releaseTitle = release.title;
+                releaseYear = release.year;
+                $scrollToRelease($refs.releases, $el);
+              }">
               <div
                 class="absolute inset-0 -z-10 flex items-end justify-center bg-zinc-950 p-8 font-medium text-zinc-400">
                 <div x-text="release.title"></div>
               </div>
               <img
-                class="absolute inset-0 -z-10 flex items-end justify-center border-none bg-zinc-950 transition-opacity duration-500"
+                class="absolute inset-0 -z-10 flex h-full w-full items-end justify-center border-none bg-zinc-950 object-cover transition-opacity duration-500"
                 x-data="{ hasLoadedImg: false }"
                 :class="{ 'opacity-0': !hasLoadedImg, 'opacity-100': hasLoadedImg }"
                 :srcset="`
-                  https://f4.bcbits.com/img/${release.img}_5.jpg,
+                  https://f4.bcbits.com/img/${release.img}_5.jpg 1x,
                   https://f4.bcbits.com/img/${release.img}_10.jpg 2x,
                   https://f4.bcbits.com/img/${release.img}_1.jpg 3x
                 `"
