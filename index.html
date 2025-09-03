@@ -132,7 +132,7 @@
                   class="bandcamp border-none opacity-0 transition-opacity duration-500"
                   :class="{ 'opacity-0': !hasLoaded, 'opacity-100': hasLoaded }"
                   loading="lazy"
-                  :src="`https://bandcamp.ochremusic.com/EmbeddedPlayer/album=${release.id}/size=large/bgcol=09090b/linkcol=eab308/minimal=true/transparent=true/#`"
+                  :src="`https://ochre.bandcamp.com/EmbeddedPlayer/album=${release.id}/size=large/bgcol=09090b/linkcol=eab308/minimal=true/transparent=true/#`"
                   @load="hasLoaded = true"></iframe>
               </template>
               <template x-if="!renderFrame">
