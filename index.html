@@ -127,6 +127,13 @@
                 :alt="`The album art for '${release.title}', by Ochre.`"
                 loading="lazy"
                 @load="hasLoadedImg = true" />
+              <template x-if="activeReleaseId === release.id">
+                <div
+                  class="pointer-events-none absolute inset-0 -z-0 flex h-full w-full flex-wrap items-end justify-center p-5 opacity-0 transition-opacity duration-500"
+                  :class="{ 'opacity-0': hasLoaded, 'opacity-100': !hasLoaded }">
+                  <div class="bg-black bg-opacity-75 px-4 py-2 text-xl font-semibold italic">Loading player…</div>
+                </div>
+              </template>
               <template x-if="renderFrame">
                 <iframe
                   class="bandcamp border-none opacity-0 transition-opacity duration-500"
