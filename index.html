@@ -12,17 +12,18 @@
     x-data="{ 
       activeReleaseId: '',
       bc: '',
+      isAutoScrolling: false,
+      playerReleaseId: '',
       releaseTitle: 'Select a release…',
       releaseYear: '',
       scrollActive: false,
       showContact: false,
-      timeoutScroll: null
     }"
     :class="{ 'overflow-hidden': showContact }">
     <header class="py-16 text-center text-zinc-200">
       <h1 class="text-8xl font-extralight uppercase">Ochre</h1>
     </header>
-    <div class="flex max-w-full grow flex-row flex-wrap overflow-hidden md:container md:mx-auto">
+    <div class="flex max-w-full grow flex-row flex-wrap overflow-hidden">
       <main class="grow basis-3/4 overflow-hidden p-4 md:p-8">
         <h2 class="mb-2 text-center text-3xl font-extralight md:text-5xl" x-text="releaseTitle"></h2>
         <h3
@@ -31,7 +32,7 @@
         <div class="mb-6 flex items-center justify-center">
           <button
             class="inline-flex flex-row flex-wrap content-center rounded-md bg-zinc-950 px-4 py-1 font-medium text-zinc-400 transition-colors duration-300 hover:bg-black hover:text-yellow-500"
-            @click="window.location.href = `https://ochre.bandcamp.com/album/${bc}`">
+            @click="window.location.href = bc ? `https://ochre.bandcamp.com/album/${bc}` : 'https://ochre.bandcamp.com/'">
             Get it &rarr;
           </button>
         </div>
@@ -41,75 +42,26 @@
               class="inline-block aspect-square w-8 cursor-pointer rounded"
               :class="{ 'outline outline-3 outline-white': activeReleaseId === release.id }"
               :style="`background-color: ${release.color};`"
-              @click="if (activeReleaseId === release.id) return; activeReleaseId = release.id; $scrollToRelease($refs.releases, release.id);"></div>
+              @click="if (activeReleaseId === release.id) return; isAutoScrolling = true; activeReleaseId = release.id; bc = release.bc; releaseTitle = release.title; releaseYear = release.year; $scrollToRelease($refs.releases, release.id);"></div>
           </template>
         </div>
         <div
-          class="touch-pan flex w-full snap-x snap-mandatory gap-16 overflow-x-auto rounded py-8"
+          class="touch-pan flex w-full snap-x snap-mandatory scroll-px-[max(0px,calc(50%-350px))] gap-16 overflow-x-auto rounded px-[max(0px,calc(50%-350px))] py-8"
           id="releases"
-          @scroll="() => {
-            if (timeoutScroll) {
-              clearTimeout(timeoutScroll);
-            }
-
-            scrollActive = true;
-
-            timeoutScroll = setTimeout(() => {
-              scrollActive = false;
-              timeoutScroll = null;
-            }, 300);
-          }"
+          x-scroll-active
+          x-center-activate="0.4"
           x-ref="releases">
           <template x-for="(release, index) in $store.releases" :key="release.id">
             <div
               class="relative flex aspect-square max-w-full shrink-0 select-none snap-center snap-always overflow-hidden rounded transition-all duration-500"
               :class="{
-              'opacity-100 grayscale-0': activeReleaseId === release.id,
-              'cursor-pointer opacity-25 grayscale': activeReleaseId !== release.id
-            }"
-              :id="release.id"
-              x-data="{ hasLoaded: false, renderFrame: false, timeout: null }"
-              x-init="if (index === 0) renderFrame = true; $watch('scrollActive', (_scrollActive) => {
-                if (!_scrollActive && activeReleaseId === release.id && !renderFrame) {
-                  const setActiveTrack = () => {
-                    activeReleaseId = release.id;
-                    releaseTitle = release.title;
-                    renderFrame = true;
-                  }
-  
-                  if (timeout) {
-                    clearTimeout(timeout);
-                    timeout = null;
-                    hasLoaded = false;
-                    renderFrame = false;
-                    return $nextTick(setActiveTrack);
-                  } 
-                  
-                  return setActiveTrack();
-                }
-
-                if (activeReleaseId !== release.id && renderFrame) {
-                  hasLoaded = false;
-                  
-                  timeout = setTimeout(() => {
-                    renderFrame = false;
-                    timeout = null;
-                  }, 500)
-                }
-              })"
-              x-intersect:enter.threshold.80="() => {
-                activeReleaseId = release.id;
-                bc = release.bc;
-                releaseTitle = release.title;
-                releaseYear = release.year;
+                'opacity-100 grayscale-0': activeReleaseId === release.id,
+                'cursor-pointer opacity-25 grayscale': activeReleaseId !== release.id
               }"
-              @click="() => {
-                activeReleaseId = release.id;
-                bc = release.bc;
-                releaseTitle = release.title;
-                releaseYear = release.year;
-                $scrollToRelease($refs.releases, $el);
-              }">
+              :id="release.id"
+              :data-release-id="release.id"
+              x-data="releaseCard(release, index)"
+              @click="onClick($refs.releases)">
               <div
                 class="absolute inset-0 -z-10 flex items-end justify-center bg-zinc-950 p-8 font-medium text-zinc-400">
                 <div x-text="release.title"></div>
@@ -134,7 +86,7 @@
                   <div class="bg-black bg-opacity-75 px-4 py-2 text-xl font-semibold italic">Loading player…</div>
                 </div>
               </template>
-              <template x-if="renderFrame">
+              <template x-if="playerReleaseId === release.id">
                 <iframe
                   class="bandcamp border-none opacity-0 transition-opacity duration-500"
                   :class="{ 'opacity-0': !hasLoaded, 'opacity-100': hasLoaded }"
@@ -142,7 +94,7 @@
                   :src="`https://ochre.bandcamp.com/EmbeddedPlayer/album=${release.id}/size=large/bgcol=09090b/linkcol=eab308/minimal=true/transparent=true/#`"
                   @load="hasLoaded = true"></iframe>
               </template>
-              <template x-if="!renderFrame">
+              <template x-if="playerReleaseId !== release.id">
                 <div class="bandcamp"></div>
               </template>
             </div>

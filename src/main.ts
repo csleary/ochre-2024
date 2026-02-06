@@ -1,7 +1,6 @@
 import "./style.css";
 import Alpine from "alpinejs";
 import focus from "@alpinejs/focus";
-import intersect from "@alpinejs/intersect";
 
 declare global {
   interface Window {
@@ -11,7 +10,164 @@ declare global {
 
 window.Alpine = Alpine;
 Alpine.plugin(focus);
-Alpine.plugin(intersect);
+
+type Release = { id: string; img: string; color: string; year: string; title: string; bc: string };
+
+Alpine.directive(
+  "scroll-active",
+  (
+    el,
+    _directive,
+    { evaluate, cleanup }: { evaluate: (expression: string) => unknown; cleanup: (callback: () => void) => void }
+  ) => {
+    let timeout: number | null = null;
+
+    const onScroll = () => {
+      if (timeout !== null) {
+        window.clearTimeout(timeout);
+      }
+
+      evaluate("scrollActive = true");
+
+      timeout = window.setTimeout(() => {
+        evaluate("scrollActive = false");
+        evaluate("isAutoScrolling = false");
+        evaluate("$dispatch('center-activate:update')");
+        timeout = null;
+      }, 300);
+    };
+
+    el.addEventListener("scroll", onScroll, { passive: true });
+
+    cleanup(() => {
+      el.removeEventListener("scroll", onScroll);
+      if (timeout !== null) window.clearTimeout(timeout);
+    });
+  }
+);
+
+Alpine.directive(
+  "center-activate",
+  (
+    el,
+    { expression },
+    { evaluate, cleanup }: { evaluate: (expression: string) => unknown; cleanup: (callback: () => void) => void }
+  ) => {
+    const parseStart = (raw: string | undefined) => {
+      const fallback = 0.4;
+      if (!raw || raw.trim().length === 0) return fallback;
+      const parsed = Number(raw);
+      if (!Number.isFinite(parsed)) return fallback;
+      return Math.min(0.49, Math.max(0.01, parsed));
+    };
+
+    const start = parseStart(expression);
+    const end = 1 - start;
+    let rafLiveId: number | null = null;
+    let rafSettledId: number | null = null;
+    const getCards = () => Array.from(el.querySelectorAll<HTMLElement>("[data-release-id]"));
+
+    const setMetadataById = (releaseId: string) => {
+      const releases = evaluate("$store.releases") as unknown as Release[];
+      const release = releases?.find((r) => r.id === releaseId);
+
+      if (!release) {
+        evaluate(`activeReleaseId = ${JSON.stringify(releaseId)}`);
+        return;
+      }
+
+      evaluate(
+        `activeReleaseId = ${JSON.stringify(release.id)}; ` +
+          `bc = ${JSON.stringify(release.bc)}; ` +
+          `releaseTitle = ${JSON.stringify(release.title)}; ` +
+          `releaseYear = ${JSON.stringify(release.year)}`
+      );
+    };
+
+    const commitPlayerById = (releaseId: string) => {
+      const releases = evaluate("$store.releases") as unknown as Release[];
+      const release = releases?.find((r) => r.id === releaseId);
+      if (!release) return;
+      evaluate(`playerReleaseId = ${JSON.stringify(release.id)}`);
+    };
+
+    const chooseReleaseId = () => {
+      const containerRect = el.getBoundingClientRect();
+      const centerX = containerRect.left + containerRect.width / 2;
+      const cards = getCards();
+      if (cards.length === 0) return null;
+      let best: { el: HTMLElement; score: number } | null = null;
+      let bestFallback: { el: HTMLElement; score: number } | null = null;
+
+      for (const card of cards) {
+        const rect = card.getBoundingClientRect();
+        if (rect.width <= 0) continue;
+        const t = (centerX - rect.left) / rect.width;
+        const bandScore = Math.abs(t - 0.5);
+
+        if (t >= start && t <= end) {
+          if (!best || bandScore < best.score) best = { el: card, score: bandScore };
+        }
+
+        const fallbackScore = Math.abs(rect.left + rect.width / 2 - centerX);
+        if (!bestFallback || fallbackScore < bestFallback.score) bestFallback = { el: card, score: fallbackScore };
+      }
+
+      const chosen = best?.el ?? bestFallback?.el;
+      if (!chosen) return null;
+      const releaseId = chosen.dataset.releaseId || chosen.id;
+      return releaseId || null;
+    };
+
+    const updateSettled = () => {
+      rafSettledId = null;
+      const releaseId = chooseReleaseId();
+      if (!releaseId) return;
+      setMetadataById(releaseId);
+      commitPlayerById(releaseId);
+    };
+
+    const updateLive = () => {
+      rafLiveId = null;
+      const isAutoScrolling = Boolean(evaluate("isAutoScrolling"));
+      if (isAutoScrolling) return;
+      const releaseId = chooseReleaseId();
+      if (!releaseId) return;
+      const currentActive = evaluate("activeReleaseId") as unknown;
+      if (currentActive === releaseId) return;
+      setMetadataById(releaseId);
+    };
+
+    const scheduleUpdateSettled = () => {
+      if (rafSettledId !== null) return;
+      if (rafLiveId !== null) {
+        window.cancelAnimationFrame(rafLiveId);
+        rafLiveId = null;
+      }
+      rafSettledId = window.requestAnimationFrame(updateSettled);
+    };
+
+    const scheduleUpdateLive = () => {
+      if (rafSettledId !== null) return;
+      if (rafLiveId !== null) return;
+      rafLiveId = window.requestAnimationFrame(updateLive);
+    };
+
+    const onUpdateEvent = () => scheduleUpdateSettled();
+    el.addEventListener("scroll", scheduleUpdateLive, { passive: true });
+    el.addEventListener("center-activate:update", onUpdateEvent);
+    window.addEventListener("resize", scheduleUpdateSettled, { passive: true });
+    scheduleUpdateSettled();
+
+    cleanup(() => {
+      el.removeEventListener("scroll", scheduleUpdateLive);
+      el.removeEventListener("center-activate:update", onUpdateEvent);
+      window.removeEventListener("resize", scheduleUpdateSettled);
+      if (rafLiveId !== null) window.cancelAnimationFrame(rafLiveId);
+      if (rafSettledId !== null) window.cancelAnimationFrame(rafSettledId);
+    });
+  }
+);
 
 Alpine.magic("scrollToRelease", () => (container: HTMLElement, releaseIdOrElement: string | HTMLElement) => {
   let releaseElement: HTMLElement | null;
@@ -31,6 +187,44 @@ Alpine.magic("scrollToRelease", () => (container: HTMLElement, releaseIdOrElemen
   const scrollLeft = container.scrollLeft + (releaseRect.left - containerRect.left) - offset;
   container.scrollTo({ left: scrollLeft, behavior });
 });
+
+type ReleaseCardComponent = {
+  $el: HTMLElement;
+  $scrollToRelease: (container: HTMLElement, releaseIdOrElement: string | HTMLElement) => void;
+  $watch: (expression: string, callback: (value: unknown) => void) => void;
+  activeReleaseId: string;
+  bc: string;
+  hasLoaded: boolean;
+  index: number;
+  isAutoScrolling: boolean;
+  playerReleaseId: string;
+  release: Release;
+  releaseTitle: string;
+  releaseYear: string;
+};
+
+Alpine.data("releaseCard", (release: Release, index: number) => ({
+  release,
+  index,
+  hasLoaded: false,
+
+  init(this: ReleaseCardComponent) {
+    this.$watch("playerReleaseId", (playerReleaseId) => {
+      if (playerReleaseId === this.release.id) {
+        this.hasLoaded = false;
+      }
+    });
+  },
+
+  onClick(this: ReleaseCardComponent, container: HTMLElement) {
+    this.isAutoScrolling = true;
+    this.activeReleaseId = this.release.id;
+    this.bc = this.release.bc;
+    this.releaseTitle = this.release.title;
+    this.releaseYear = this.release.year;
+    this.$scrollToRelease(container, this.$el);
+  }
+}));
 
 Alpine.store("releases", [
   { id: "1029783069", img: "a0431739409", color: "#584135", year: "2025", title: "Night Cycle", bc: "night-cycle" },
