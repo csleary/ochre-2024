@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script type="module" src="/src/main.ts" defer></script>
+    <script type="module" src="/src/main.ts"></script>
     <title>Ochre</title>
   </head>
   <body
@@ -46,14 +46,14 @@
           </template>
         </div>
         <div
-          class="touch-pan flex w-full snap-x snap-mandatory scroll-px-[max(0px,calc(50%-350px))] gap-16 overflow-x-auto rounded px-[max(0px,calc(50%-350px))] py-8"
+          class="flex w-full touch-pan-x snap-x snap-mandatory scroll-px-[max(0px,calc(50%-350px))] gap-16 overflow-x-auto rounded px-[max(0px,calc(50%-350px))] py-8"
           id="releases"
           x-scroll-active
           x-center-activate="0.4"
           x-ref="releases">
           <template x-for="(release, index) in $store.releases" :key="release.id">
             <div
-              class="relative flex aspect-square max-w-full shrink-0 select-none snap-center snap-always overflow-hidden rounded transition-all duration-500"
+              class="relative flex aspect-square max-w-full shrink-0 select-none snap-center snap-always overflow-hidden rounded transition-[opacity,filter] duration-500"
               :class="{
                 'opacity-100 grayscale-0': activeReleaseId === release.id,
                 'cursor-pointer opacity-25 grayscale': activeReleaseId !== release.id
@@ -83,7 +83,7 @@
                 <div
                   class="pointer-events-none absolute inset-0 -z-0 flex h-full w-full flex-wrap items-end justify-center p-5 opacity-0 transition-opacity duration-500"
                   :class="{ 'opacity-0': hasLoaded, 'opacity-100': !hasLoaded }">
-                  <div class="bg-black bg-opacity-75 px-4 py-2 text-xl font-semibold italic">Loading player…</div>
+                  <div class="bg-black/75 px-4 py-2 text-xl font-semibold italic">Loading player…</div>
                 </div>
               </template>
               <template x-if="playerReleaseId === release.id">
@@ -140,7 +140,7 @@
     </footer>
     <template x-teleport="body">
       <div
-        class="fixed flex h-screen w-screen overflow-hidden bg-black bg-opacity-50"
+        class="fixed inset-0 flex overflow-hidden bg-black/50"
         aria-hidden="true"
         x-show="showContact"
         x-transition.duration.300ms.opacity>
