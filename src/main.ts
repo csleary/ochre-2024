@@ -227,7 +227,8 @@ Alpine.data("releaseCard", (release: Release, index: number) => ({
 }));
 
 Alpine.store("releases", [
-  { id: "1029783069", img: "a0431739409", color: "#584135", year: "2025", title: "Night Cycle", bc: "night-cycle" },
+  { id: "2741838751", img: "a4212792044", color: "#f6c178", year: "2026", title: "Oversail", bc: "oversail" },
+  { id: "1029783069", img: "a0431739409", color: "#6b4c39", year: "2025", title: "Night Cycle", bc: "night-cycle" },
   {
     id: "263300316",
     img: "a2224224835",
